@@ -21,7 +21,7 @@ package ledger_go
 //import (
 //	"fmt"
 //	"github.com/stretchr/testify/assert"
-//	"github.com/zondax/hid"
+//	"github.com/troian/hid"
 //	"sync"
 //	"testing"
 //)

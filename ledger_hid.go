@@ -23,7 +23,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/zondax/hid"
+	"github.com/troian/hid"
 )
 
 const (
