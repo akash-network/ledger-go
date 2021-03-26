@@ -1,4 +1,4 @@
-module github.com/zondax/ledger-go
+module github.com/troian/ledger-go
 
 go 1.13
 
