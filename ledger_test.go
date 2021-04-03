@@ -18,10 +18,11 @@ package ledger_go
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"sync"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var mux sync.Mutex
@@ -40,7 +41,8 @@ func Test_ListDevices(t *testing.T) {
 	defer mux.Unlock()
 
 	ledgerAdmin := NewLedgerAdmin()
-	ledgerAdmin.ListDevices()
+	_, err := ledgerAdmin.ListDevices()
+	require.NoError(t, err)
 }
 
 func Test_GetLedger(t *testing.T) {
@@ -52,7 +54,9 @@ func Test_GetLedger(t *testing.T) {
 	require.True(t, count > 0)
 
 	ledger, err := ledgerAdmin.Connect(0)
-	defer ledger.Close()
+	defer func() {
+		_ = ledger.Close()
+	}()
 
 	assert.NoError(t, err)
 	assert.NotNil(t, ledger)
@@ -67,7 +71,9 @@ func Test_BasicExchange(t *testing.T) {
 	require.True(t, count > 0)
 
 	ledger, err := ledgerAdmin.Connect(0)
-	defer ledger.Close()
+	defer func() {
+		_ = ledger.Close()
+	}()
 
 	assert.NoError(t, err)
 	assert.NotNil(t, ledger)
