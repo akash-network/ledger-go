@@ -19,6 +19,7 @@ package ledger_go
 import (
 	"encoding/binary"
 	"fmt"
+
 	"github.com/pkg/errors"
 )
 

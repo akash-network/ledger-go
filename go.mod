@@ -11,3 +11,5 @@ require (
 	google.golang.org/grpc v1.29.1
 	google.golang.org/protobuf v1.23.0
 )
+
+replace github.com/zondax/hid => github.com/troian/hid v0.9.6

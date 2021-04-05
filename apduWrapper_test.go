@@ -258,10 +258,6 @@ func Test_UnwrapApdu_SmokeTest(t *testing.T) {
 
 	output, _ := UnwrapResponseAPDU(channel, pipe, packetSize)
 
-	//fmt.Printf("INPUT     : %x\n", input)
-	//fmt.Printf("SERIALIZED: %x\n", serialized)
-	//fmt.Printf("OUTPUT    : %x\n", output)
-
 	assert.Equal(t, len(input), len(output), "Input and output messages have different size")
 	assert.True(t,
 		bytes.Equal(input, output),
