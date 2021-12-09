@@ -12,4 +12,4 @@ require (
 	google.golang.org/protobuf v1.23.0
 )
 
-replace github.com/zondax/hid => github.com/troian/hid v0.9.9
+replace github.com/zondax/hid => github.com/troian/hid v0.10.0
