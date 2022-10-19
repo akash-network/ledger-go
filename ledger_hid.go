@@ -1,4 +1,4 @@
-// +build !ledger_mock,!ledger_zemu
+//go:build !ledger_mock && !ledger_zemu
 
 /*******************************************************************************
 *   (c) 2018 ZondaX GmbH
@@ -17,6 +17,8 @@
 ********************************************************************************/
 
 package ledger_go
+
+// #cgo darwin CFLAGS: -Wno-deprecated-declarations
 
 import (
 	"errors"
