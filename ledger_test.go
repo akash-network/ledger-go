@@ -18,10 +18,11 @@ package ledger_go
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"sync"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var mux sync.Mutex
@@ -40,7 +41,8 @@ func Test_ListDevices(t *testing.T) {
 	defer mux.Unlock()
 
 	ledgerAdmin := NewLedgerAdmin()
-	ledgerAdmin.ListDevices()
+	_, err := ledgerAdmin.ListDevices()
+	require.NoError(t, err)
 }
 
 func Test_GetLedger(t *testing.T) {
@@ -52,10 +54,12 @@ func Test_GetLedger(t *testing.T) {
 	require.True(t, count > 0)
 
 	ledger, err := ledgerAdmin.Connect(0)
-	defer ledger.Close()
-
 	assert.NoError(t, err)
 	assert.NotNil(t, ledger)
+
+	defer func() {
+		_ = ledger.Close()
+	}()
 }
 
 func Test_BasicExchange(t *testing.T) {
@@ -67,10 +71,12 @@ func Test_BasicExchange(t *testing.T) {
 	require.True(t, count > 0)
 
 	ledger, err := ledgerAdmin.Connect(0)
-	defer ledger.Close()
-
 	assert.NoError(t, err)
 	assert.NotNil(t, ledger)
+
+	defer func() {
+		_ = ledger.Close()
+	}()
 
 	// Call device info (this should work in main menu and many apps)
 	message := []byte{0xE0, 0x01, 0, 0, 0}
