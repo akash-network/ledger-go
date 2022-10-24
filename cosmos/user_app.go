@@ -40,13 +40,13 @@ var (
 )
 
 var (
-	errNotSupportedAppVersion  = errors.New("app version not supported")
-	errNotFoundLedgerDevice    = errors.New("couldn't find ledger device")
-	errCosmosAppIsNotRunning   = errors.New("are you sure the Cosmos app is open?")
-	errInvalidResponse         = errors.New("invalid response")
-	errNotEnoughTokens         = errors.New("not enough tokens were provided")
-	errUnexpectedJsonCharacter = errors.New("unexpected character in JSON string")
-	errIncompleteJsonString    = errors.New("the JSON string is not a complete")
+	errNotSupportedAppVersion  = errors.New("ledger-cosmos: app version not supported")
+	errNotFoundLedgerDevice    = errors.New("ledger-cosmos: couldn't find ledger device")
+	errCosmosAppIsNotRunning   = errors.New("ledger-cosmos: are you sure the Cosmos app is open")
+	errInvalidResponse         = errors.New("ledger-cosmos: invalid response")
+	errNotEnoughTokens         = errors.New("ledger-cosmos: not enough tokens were provided")
+	errUnexpectedJsonCharacter = errors.New("ledger-cosmos: unexpected character in JSON string")
+	errIncompleteJsonString    = errors.New("ledger-cosmos: the JSON string is not a complete")
 )
 
 // LedgerCosmos represents a connection to the Cosmos app in a Ledger Nano S device
@@ -280,13 +280,13 @@ func (ledger *LedgerCosmos) signv2(bip32Path []uint32, transaction []byte) ([]by
 // this command requires user confirmation in the device
 func (ledger *LedgerCosmos) getAddressPubKeySECP256K1(bip32Path []uint32, hrp string, requireConfirmation bool) (pubkey []byte, addr string, err error) {
 	if len(hrp) > 83 {
-		return nil, "", fmt.Errorf("hrp len should be <10")
+		return nil, "", errors.New("ledger-cosmos: hrp len should be <10")
 	}
 
 	hrpBytes := []byte(hrp)
 	for _, b := range hrpBytes {
 		if !validHRPByte(b) {
-			return nil, "", fmt.Errorf("all characters in the HRP must be in the [33, 126] range")
+			return nil, "", errors.New("ledger-cosmos: all characters in the HRP must be in the [33, 126] range")
 		}
 	}
 
@@ -313,7 +313,7 @@ func (ledger *LedgerCosmos) getAddressPubKeySECP256K1(bip32Path []uint32, hrp st
 		return nil, "", err
 	}
 	if len(response) < 35+len(hrp) {
-		return nil, "", fmt.Errorf("invalid response")
+		return nil, "", errors.New("ledger-cosmos: invalid response")
 	}
 
 	pubkey = response[0:33]
@@ -336,10 +336,10 @@ func processErrorResponse(response []byte, err error) error {
 		case "PARSER ERROR: JSMN_ERROR_PART":
 			err = errIncompleteJsonString
 		default:
-			err = errors.New(msg)
+			err = fmt.Errorf("ledger-cosmos: unknown error - %s", msg)
 		}
 	case errLedgerApduDataInvalid:
-		err = errors.New(msg)
+		err = fmt.Errorf("ledger-cosmos: unknown error - %s", msg)
 	}
 
 	return err

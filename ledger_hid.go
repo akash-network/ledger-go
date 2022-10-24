@@ -128,7 +128,7 @@ func (admin *LedgerAdminHID) Connect(requiredIndex int) (LedgerDevice, error) {
 		}
 	}
 
-	return nil, fmt.Errorf("LedgerHID device (idx %d) not found", requiredIndex)
+	return nil, fmt.Errorf("ledger-hid: device (idx %d) not found", requiredIndex)
 }
 
 func (ledger *LedgerDeviceHID) write(buffer []byte) (int, error) {
@@ -175,11 +175,11 @@ func (ledger *LedgerDeviceHID) readThread() {
 
 func (ledger *LedgerDeviceHID) Exchange(command []byte) ([]byte, error) {
 	if len(command) < 5 {
-		return nil, fmt.Errorf("APDU commands should not be smaller than 5")
+		return nil, fmt.Errorf("ledger-hid: APDU commands should not be smaller than 5")
 	}
 
 	if (byte)(len(command)-5) != command[4] {
-		return nil, fmt.Errorf("APDU[data length] mismatch")
+		return nil, fmt.Errorf("ledger-hid: APDU[data length] mismatch")
 	}
 
 	serializedCommand, err := WrapCommandAPDU(Channel, command, PacketSize)
@@ -201,7 +201,7 @@ func (ledger *LedgerDeviceHID) Exchange(command []byte) ([]byte, error) {
 	}
 
 	if len(response) < 2 {
-		return nil, fmt.Errorf("len(response) < 2")
+		return nil, fmt.Errorf("ledger-hid: len(response) < 2")
 	}
 
 	swOffset := len(response) - 2

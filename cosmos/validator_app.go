@@ -17,6 +17,7 @@
 package ledger_cosmos_go
 
 import (
+	"errors"
 	"fmt"
 	"math"
 
@@ -33,18 +34,18 @@ const (
 	validatorMessageChunkSize = 250
 )
 
-// Validator app
+// LedgerTendermintValidator app
 type LedgerTendermintValidator struct {
 	// Add support for this app
 	api ledger_go.LedgerDevice
 }
 
-// RequiredCosmosUserAppVersion indicates the minimum required version of the Tendermint app
+// RequiredTendermintValidatorAppVersion indicates the minimum required version of the Tendermint app
 func RequiredTendermintValidatorAppVersion() VersionInfo {
 	return VersionInfo{0, 0, 5, 0}
 }
 
-// FindLedgerCosmosValidatorApp finds a Cosmos validator app running in a ledger device
+// FindLedgerTendermintValidatorApp finds a Cosmos validator app running in a ledger device
 func FindLedgerTendermintValidatorApp() (*LedgerTendermintValidator, error) {
 	admin := ledger_go.NewLedgerAdmin()
 	if admin.CountDevices() == 0 {
@@ -68,7 +69,7 @@ func FindLedgerTendermintValidatorApp() (*LedgerTendermintValidator, error) {
 
 	if err != nil {
 		if err.Error() == "[APDU_CODE_CLA_NOT_SUPPORTED] Class not supported" {
-			return nil, fmt.Errorf("are you sure the Tendermint Validator app is open?")
+			return nil, fmt.Errorf("ledger-cosmos: are you sure the Tendermint Validator app is open")
 		}
 		return nil, err
 	}
@@ -97,7 +98,7 @@ func (ledger *LedgerTendermintValidator) GetVersion() (*VersionInfo, error) {
 	}
 
 	if len(response) < 4 {
-		return nil, fmt.Errorf("invalid response")
+		return nil, errors.New("ledger-cosmos: invalid response")
 	}
 
 	return &VersionInfo{
@@ -125,13 +126,13 @@ func (ledger *LedgerTendermintValidator) GetPublicKeyED25519(bip32Path []uint32)
 	}
 
 	if len(response) < 4 {
-		return nil, fmt.Errorf("invalid response. Too short")
+		return nil, errors.New("ledger-cosmos: invalid response. Too short")
 	}
 
 	return response, nil
 }
 
-// SignSECP256K1 signs a message/vote using the Tendermint validator app
+// SignED25519 signs a message/vote using the Tendermint validator app
 func (ledger *LedgerTendermintValidator) SignED25519(bip32Path []uint32, message []byte) ([]byte, error) {
 	var packetIndex byte = 1
 	var packetCount = 1 + byte(math.Ceil(float64(len(message))/float64(validatorMessageChunkSize)))

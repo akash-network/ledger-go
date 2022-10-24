@@ -68,7 +68,7 @@ func SerializePacket(
 	sequenceIdx uint16) (result []byte, offset int, err error) {
 
 	if packetSize < 3 {
-		return nil, 0, errors.New("Packet size must be at least 3")
+		return nil, 0, errors.New("ledger: Packet size must be at least 3")
 	}
 
 	var headerOffset uint8
@@ -109,23 +109,23 @@ func DeserializePacket(
 	sequenceIdx uint16) (result []byte, totalResponseLength uint16, err error) {
 
 	if (sequenceIdx == 0 && len(buffer) < 7) || (sequenceIdx > 0 && len(buffer) < 5) {
-		return nil, 0, errors.New("Cannot deserialize the packet. Header information is missing.")
+		return nil, 0, errors.New("ledger: Cannot deserialize the packet. Header information is missing.")
 	}
 
 	var headerOffset uint8
 
 	if codec.Uint16(buffer) != channel {
-		return nil, 0, errors.New("Invalid channel")
+		return nil, 0, errors.New("ledger: Invalid channel")
 	}
 	headerOffset += 2
 
 	if buffer[headerOffset] != 0x05 {
-		return nil, 0, errors.New("Invalid tag")
+		return nil, 0, errors.New("ledger: Invalid tag")
 	}
 	headerOffset++
 
 	if codec.Uint16(buffer[headerOffset:]) != sequenceIdx {
-		return nil, 0, errors.New("Wrong sequenceIdx")
+		return nil, 0, errors.New("ledger: Wrong sequenceIdx")
 	}
 	headerOffset += 2
 
