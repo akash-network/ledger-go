@@ -68,7 +68,7 @@ func FindLedgerTendermintValidatorApp() (*LedgerTendermintValidator, error) {
 	appVersion, err := ledgerCosmosValidatorApp.GetVersion()
 
 	if err != nil {
-		if err.Error() == "[APDU_CODE_CLA_NOT_SUPPORTED] Class not supported" {
+		if err.Error() == "[APDU_CODE_CLA_NOT_SUPPORTED] CLA not supported" {
 			return nil, fmt.Errorf("ledger-cosmos: are you sure the Tendermint Validator app is open")
 		}
 		return nil, err
