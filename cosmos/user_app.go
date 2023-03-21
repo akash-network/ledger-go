@@ -78,7 +78,7 @@ func FindLedgerCosmosUserApp() (*LedgerCosmos, error) {
 	appVersion, err := app.GetVersion()
 
 	if err != nil {
-		if err.Error() == "[APDU_CODE_CLA_NOT_SUPPORTED] Class not supported" {
+		if err.Error() == "[APDU_CODE_CLA_NOT_SUPPORTED] CLA not supported" {
 			return nil, errCosmosAppIsNotRunning
 		}
 		return nil, err
