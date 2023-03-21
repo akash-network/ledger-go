@@ -168,6 +168,10 @@ func (ledger *LedgerDeviceHID) readThread() {
 
 		// Check for HID Read Error (May occur even during normal runtime)
 		if err != nil {
+			if errors.Is(err, hid.ErrDeviceClosed) || errors.Is(err, hid.ErrUnsupportedPlatform) {
+				return
+			}
+
 			continue
 		}
 
