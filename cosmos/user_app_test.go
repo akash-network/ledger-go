@@ -23,7 +23,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/btcsuite/btcd/btcec"
+	"github.com/btcsuite/btcd/btcec/v2"
+	"github.com/btcsuite/btcd/btcec/v2/ecdsa"
+
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -31,8 +34,11 @@ import (
 
 func Test_UserFindLedger(t *testing.T) {
 	userApp, err := FindLedgerCosmosUserApp()
-	require.NoError(t, err)
-	require.NotNil(t, userApp)
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+
+	assert.NotNil(t, userApp)
 	defer func() {
 		_ = userApp.Close()
 	}()
@@ -40,27 +46,28 @@ func Test_UserFindLedger(t *testing.T) {
 
 func Test_UserGetVersion(t *testing.T) {
 	userApp, err := FindLedgerCosmosUserApp()
-	require.NoError(t, err)
-	require.NotNil(t, userApp)
-
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
 	defer func() {
 		_ = userApp.Close()
 	}()
 
 	version, err := userApp.GetVersion()
+	require.Nil(t, err, "Detected error")
 	fmt.Println(version)
 
-	require.Equal(t, uint8(0x0), version.AppMode, "TESTING MODE ENABLED!!")
-	require.Equal(t, uint8(0x2), version.Major, "Wrong Major version")
-	require.Equal(t, uint8(0x1), version.Minor, "Wrong Minor version")
-	require.Equal(t, uint8(0x0), version.Patch, "Wrong Patch version")
+	assert.Equal(t, uint8(0x0), version.AppMode, "TESTING MODE ENABLED!!")
+	assert.Equal(t, uint8(0x2), version.Major, "Wrong Major version")
+	assert.Equal(t, uint8(0x1), version.Minor, "Wrong Minor version")
+	assert.Equal(t, uint8(0x0), version.Patch, "Wrong Patch version")
 }
 
 func Test_UserGetPublicKey(t *testing.T) {
 	userApp, err := FindLedgerCosmosUserApp()
-	require.NoError(t, err)
-	require.NotNil(t, userApp)
-
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
 	defer func() {
 		_ = userApp.Close()
 	}()
@@ -72,11 +79,11 @@ func Test_UserGetPublicKey(t *testing.T) {
 		t.Fatalf("Detected error, err: %s\n", err.Error())
 	}
 
-	require.Equal(t, 33, len(pubKey),
+	assert.Equal(t, 33, len(pubKey),
 		"Public key has wrong length: %x, expected length: %x\n", pubKey, 65)
 	fmt.Printf("PUBLIC KEY: %x\n", pubKey)
 
-	require.Equal(t,
+	assert.Equal(t,
 		"03cb5a33c61595206294140c45efa8a817533e31aa05ea18343033a0732a677005",
 		hex.EncodeToString(pubKey),
 		"Unexpected pubkey")
@@ -84,9 +91,9 @@ func Test_UserGetPublicKey(t *testing.T) {
 
 func Test_GetAddressPubKeySECP256K1_Zero(t *testing.T) {
 	userApp, err := FindLedgerCosmosUserApp()
-	require.NoError(t, err)
-	require.NotNil(t, userApp)
-
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
 	defer func() {
 		_ = userApp.Close()
 	}()
@@ -102,16 +109,17 @@ func Test_GetAddressPubKeySECP256K1_Zero(t *testing.T) {
 	fmt.Printf("PUBLIC KEY : %x\n", pubKey)
 	fmt.Printf("BECH32 ADDR: %s\n", addr)
 
-	require.Equal(t, 33, len(pubKey), "Public key has wrong length: %x, expected length: %x\n", pubKey, 65)
-	require.Equal(t, "034fef9cd7c4c63588d3b03feb5281b9d232cba34d6f3d71aee59211ffbfe1fe87", hex.EncodeToString(pubKey), "Unexpected pubkey")
-	require.Equal(t, "cosmos1w34k53py5v5xyluazqpq65agyajavep2rflq6h", addr, "Unexpected addr")
+	assert.Equal(t, 33, len(pubKey), "Public key has wrong length: %x, expected length: %x\n", pubKey, 65)
+
+	assert.Equal(t, "034fef9cd7c4c63588d3b03feb5281b9d232cba34d6f3d71aee59211ffbfe1fe87", hex.EncodeToString(pubKey), "Unexpected pubkey")
+	assert.Equal(t, "cosmos1w34k53py5v5xyluazqpq65agyajavep2rflq6h", addr, "Unexpected addr")
 }
 
 func Test_GetAddressPubKeySECP256K1(t *testing.T) {
 	userApp, err := FindLedgerCosmosUserApp()
-	require.NoError(t, err)
-	require.NotNil(t, userApp)
-
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
 	defer func() {
 		_ = userApp.Close()
 	}()
@@ -127,16 +135,17 @@ func Test_GetAddressPubKeySECP256K1(t *testing.T) {
 	fmt.Printf("PUBLIC KEY : %x\n", pubKey)
 	fmt.Printf("BECH32 ADDR: %s\n", addr)
 
-	require.Equal(t, 33, len(pubKey), "Public key has wrong length: %x, expected length: %x\n", pubKey, 65)
-	require.Equal(t, "03cb5a33c61595206294140c45efa8a817533e31aa05ea18343033a0732a677005", hex.EncodeToString(pubKey), "Unexpected pubkey")
-	require.Equal(t, "cosmos162zm3k8mc685592d7vej2lxrp58mgmkcec76d6", addr, "Unexpected addr")
+	assert.Equal(t, 33, len(pubKey), "Public key has wrong length: %x, expected length: %x\n", pubKey, 65)
+
+	assert.Equal(t, "03cb5a33c61595206294140c45efa8a817533e31aa05ea18343033a0732a677005", hex.EncodeToString(pubKey), "Unexpected pubkey")
+	assert.Equal(t, "cosmos162zm3k8mc685592d7vej2lxrp58mgmkcec76d6", addr, "Unexpected addr")
 }
 
 func Test_UserPK_HDPaths(t *testing.T) {
 	userApp, err := FindLedgerCosmosUserApp()
-	require.NoError(t, err)
-	require.NotNil(t, userApp)
-
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
 	defer func() {
 		_ = userApp.Close()
 	}()
@@ -164,19 +173,19 @@ func Test_UserPK_HDPaths(t *testing.T) {
 			t.Fatalf("Detected error, err: %s\n", err.Error())
 		}
 
-		require.Equal(
+		assert.Equal(
 			t,
 			33,
 			len(pubKey),
 			"Public key has wrong length: %x, expected length: %x\n", pubKey, 65)
 
-		require.Equal(
+		assert.Equal(
 			t,
 			expected[i],
 			hex.EncodeToString(pubKey),
 			"Public key 44'/118'/0'/0/%d does not match\n", i)
 
-		_, err = btcec.ParsePubKey(pubKey[:], btcec.S256())
+		_, err = btcec.ParsePubKey(pubKey[:])
 		require.Nil(t, err, "Error parsing public key err: %s\n", err)
 
 	}
@@ -203,9 +212,9 @@ func getDummyTx() []byte {
 
 func Test_UserSign(t *testing.T) {
 	userApp, err := FindLedgerCosmosUserApp()
-	require.NoError(t, err)
-	require.NotNil(t, userApp)
-
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
 	defer func() {
 		_ = userApp.Close()
 	}()
@@ -214,28 +223,46 @@ func Test_UserSign(t *testing.T) {
 
 	message := getDummyTx()
 	signature, err := userApp.SignSECP256K1(path, message)
-	require.NoError(t, err, "[Sign]")
+	if err != nil {
+		t.Fatalf("[Sign] Error: %s\n", err.Error())
+	}
 
 	// Verify Signature
 	pubKey, err := userApp.GetPublicKeySECP256K1(path)
-	require.NoError(t, err, "[GetPK]")
+	if err != nil {
+		t.Fatalf("Detected error, err: %s\n", err.Error())
+	}
 
-	pub2, err := btcec.ParsePubKey(pubKey[:], btcec.S256())
-	require.NoError(t, err, "[ParsePK]")
+	if err != nil {
+		t.Fatalf("[GetPK] Error: " + err.Error())
+		return
+	}
 
-	sig2, err := btcec.ParseDERSignature(signature[:], btcec.S256())
-	require.NoError(t, err, "[ParseSig]")
+	pub2, err := btcec.ParsePubKey(pubKey[:])
+	if err != nil {
+		t.Fatalf("[ParsePK] Error: " + err.Error())
+		return
+	}
+
+	sig2, err := ecdsa.ParseDERSignature(signature[:])
+	if err != nil {
+		t.Fatalf("[ParseSig] Error: " + err.Error())
+		return
+	}
 
 	hash := sha256.Sum256(message)
 	verified := sig2.Verify(hash[:], pub2)
-	require.True(t, verified, "[VerifySig] Error verifying signature")
+	if !verified {
+		t.Fatalf("[VerifySig] Error verifying signature: " + err.Error())
+		return
+	}
 }
 
 func Test_UserSign_Fails(t *testing.T) {
 	userApp, err := FindLedgerCosmosUserApp()
-	require.NoError(t, err)
-	require.NotNil(t, userApp)
-
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
 	defer func() {
 		_ = userApp.Close()
 	}()
@@ -247,10 +274,10 @@ func Test_UserSign_Fails(t *testing.T) {
 	message = append(garbage, message...)
 
 	_, err = userApp.SignSECP256K1(path, message)
-	require.Error(t, err)
+	assert.Error(t, err)
 	errMessage := err.Error()
 
 	if errMessage != "Invalid character in JSON string" && errMessage != "Unexpected characters" {
-		require.FailNow(t, "Unexpected error message returned: "+errMessage)
+		assert.Fail(t, "Unexpected error message returned: "+errMessage)
 	}
 }
