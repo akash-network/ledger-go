@@ -331,6 +331,10 @@ func processErrorResponse(response []byte, err error) error {
 	// In this special case, we can extract additional info
 	msg := string(response)
 
+	if msg == "" {
+		msg = err.Error()
+	}
+
 	switch err.Error() {
 	case errLedgerApduBadKeyHandle:
 		switch msg {
