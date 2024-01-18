@@ -90,12 +90,12 @@ func GetBip32bytesv1(bip32Path []uint32, hardenCount int) ([]byte, error) {
 }
 
 func GetBip32bytesv2(bip44Path []uint32, hardenCount int) ([]byte, error) {
-	message := make([]byte, 40)
+	message := make([]byte, 20)
 	if len(bip44Path) != 5 {
 		return nil, fmt.Errorf("path should contain 5 elements")
 	}
 	for index, element := range bip44Path {
-		pos := index*4
+		pos := index * 4
 		value := element
 		if index < hardenCount {
 			value = 0x80000000 | element
