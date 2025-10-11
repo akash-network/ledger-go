@@ -1,7 +1,7 @@
-//+build ledger_mock
+//go:build ledger_mock
 
 /*******************************************************************************
-*   (c) 2018 ZondaX GmbH
+*   (c) Zondax AG
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -19,49 +19,54 @@
 package ledger_go
 
 import (
-	"bytes"
 	"encoding/hex"
-	"log"
+	"fmt"
 )
+
+const mockDeviceName = "Mock device"
 
 type LedgerAdminMock struct{}
 
-type LedgerDeviceMock struct{}
+type LedgerDeviceMock struct {
+	commands map[string]string
+}
 
-func NewLedgerAdmin() *LedgerAdminMock {
+func NewLedgerAdmin() LedgerAdmin {
 	return &LedgerAdminMock{}
 }
 
 func (admin *LedgerAdminMock) ListDevices() ([]string, error) {
-	x := []string{"Mock device"}
-	return x, nil
+	return []string{mockDeviceName}, nil
 }
 
 func (admin *LedgerAdminMock) CountDevices() int {
 	return 1
 }
 
-func (admin *LedgerAdminMock) Connect(deviceIndex int) (*LedgerDeviceMock, error) {
-	return &LedgerDeviceMock{}, nil
+func (admin *LedgerAdminMock) Connect(deviceIndex int) (LedgerDevice, error) {
+	return NewLedgerDeviceMock(), nil
+}
+
+func NewLedgerDeviceMock() *LedgerDeviceMock {
+	return &LedgerDeviceMock{
+		commands: make(map[string]string),
+	}
 }
 
 func (ledger *LedgerDeviceMock) Exchange(command []byte) ([]byte, error) {
-	// Some predetermined command/replies
-	infoCommand := []byte{0xE0, 0x01, 0, 0, 0}
-	infoReply, _ := hex.DecodeString("311000040853706563756c6f73000b53706563756c6f734d4355")
-
-	reply := []byte{}
-
-	log.Printf("exchange [mock] >>> %s", hex.EncodeToString(command))
-
-	if bytes.Equal(command, infoCommand) {
-		reply = infoReply
+	hexCommand := hex.EncodeToString(command)
+	if reply, ok := ledger.commands[hexCommand]; ok {
+		return hex.DecodeString(reply)
 	}
-	// always return the same
+	return nil, fmt.Errorf("unknown command: %s", hexCommand)
+}
 
-	log.Printf("exchange [mock] <<< %s", hex.EncodeToString(reply))
+func (ledger *LedgerDeviceMock) SetCommandReplies(commands map[string]string) {
+	ledger.commands = commands
+}
 
-	return reply, nil
+func (ledger *LedgerDeviceMock) ClearCommands() {
+	ledger.commands = make(map[string]string)
 }
 
 func (ledger *LedgerDeviceMock) Close() error {

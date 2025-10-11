@@ -203,9 +203,9 @@ func getDummyTx() []byte {
 		"msgs": ["SOMETHING"],
 		"sequence": 3
 	}`
-	dummyTx = strings.Replace(dummyTx, " ", "", -1)
-	dummyTx = strings.Replace(dummyTx, "\n", "", -1)
-	dummyTx = strings.Replace(dummyTx, "\t", "", -1)
+	dummyTx = strings.ReplaceAll(dummyTx, " ", "")
+	dummyTx = strings.ReplaceAll(dummyTx, "\n", "")
+	dummyTx = strings.ReplaceAll(dummyTx, "\t", "")
 
 	return []byte(dummyTx)
 }
@@ -222,7 +222,7 @@ func Test_UserSign(t *testing.T) {
 	path := []uint32{44, 118, 0, 0, 5}
 
 	message := getDummyTx()
-	signature, err := userApp.SignSECP256K1(path, message)
+	signature, err := userApp.SignSECP256K1(path, message, 0)
 	if err != nil {
 		t.Fatalf("[Sign] Error: %s\n", err.Error())
 	}
@@ -273,7 +273,7 @@ func Test_UserSign_Fails(t *testing.T) {
 	garbage := []byte{65}
 	message = append(garbage, message...)
 
-	_, err = userApp.SignSECP256K1(path, message)
+	_, err = userApp.SignSECP256K1(path, message, 0)
 	assert.Error(t, err)
 	errMessage := err.Error()
 

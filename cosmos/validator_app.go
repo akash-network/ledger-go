@@ -135,7 +135,7 @@ func (ledger *LedgerTendermintValidator) GetPublicKeyED25519(bip32Path []uint32)
 // SignED25519 signs a message/vote using the Tendermint validator app
 func (ledger *LedgerTendermintValidator) SignED25519(bip32Path []uint32, message []byte) ([]byte, error) {
 	var packetIndex byte = 1
-	var packetCount = 1 + byte(math.Ceil(float64(len(message))/float64(validatorMessageChunkSize)))
+	packetCount := 1 + byte(math.Ceil(float64(len(message))/float64(validatorMessageChunkSize)))
 
 	var finalResponse []byte
 
@@ -180,7 +180,7 @@ func (ledger *LedgerTendermintValidator) SignED25519(bip32Path []uint32, message
 			message = message[chunk:]
 		}
 		packetIndex++
-
 	}
+
 	return finalResponse, nil
 }

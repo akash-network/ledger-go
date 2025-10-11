@@ -38,3 +38,7 @@ cmake-build-debug/
 \.idea/workspace\.xml
 \.idea/
 vendor/
+
+go.work*
+
+coverage.txt

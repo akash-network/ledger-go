@@ -23,8 +23,30 @@ import (
 	"github.com/pkg/errors"
 )
 
-var codec = binary.BigEndian
+const (
+	MinPacketSize = 3
+	TagValue      = 0x05
+)
 
+const (
+	ErrMsgPacketSize       = "packet size must be at least 3"
+	ErrMsgInvalidChannel   = "invalid channel"
+	ErrMsgInvalidTag       = "invalid tag"
+	ErrMsgWrongSequenceIdx = "wrong sequenceIdx"
+)
+
+var (
+	ErrPacketSize       = errors.New(ErrMsgPacketSize)
+	ErrInvalidChannel   = errors.New(ErrMsgInvalidChannel)
+	ErrInvalidTag       = errors.New(ErrMsgInvalidTag)
+	ErrWrongSequenceIdx = errors.New(ErrMsgWrongSequenceIdx)
+)
+
+var (
+	codec = binary.BigEndian
+)
+
+// ErrorMessage returns a human-readable error message for a given APDU error code.
 func ErrorMessage(errorCode uint16) string {
 	switch errorCode {
 	// FIXME: Code and description don't match for 0x6982 and 0x6983 based on
@@ -67,108 +89,97 @@ func SerializePacket(
 	channel uint16,
 	command []byte,
 	packetSize int,
-	sequenceIdx uint16) (result []byte, offset int, err error) {
-
+	sequenceIdx uint16,
+) ([]byte, int, error) {
 	if packetSize < 3 {
-		return nil, 0, errors.New("ledger: Packet size must be at least 3")
+		return nil, 0, ErrPacketSize
 	}
 
-	var headerOffset uint8
+	buffer := make([]byte, packetSize)
 
-	result = make([]byte, packetSize)
-	var buffer = result
+	offset := 0
 
 	// Insert channel (2 bytes)
 	codec.PutUint16(buffer, channel)
-	headerOffset += 2
+	offset += 2
 
 	// Insert tag (1 byte)
-	buffer[headerOffset] = 0x05
-	headerOffset += 1
-
-	var commandLength uint16
-	commandLength = uint16(len(command))
+	buffer[offset] = 0x05
+	offset++
 
 	// Insert sequenceIdx (2 bytes)
-	codec.PutUint16(buffer[headerOffset:], sequenceIdx)
-	headerOffset += 2
+	codec.PutUint16(buffer[offset:], sequenceIdx)
+	offset += 2
 
-	// Only insert total size of the command in the first package
+	// Only insert the total size of the command in the first package
 	if sequenceIdx == 0 {
 		// Insert sequenceIdx (2 bytes)
-		codec.PutUint16(buffer[headerOffset:], commandLength)
-		headerOffset += 2
+		commandLength := uint16(len(command))
+		codec.PutUint16(buffer[offset:], commandLength)
+		offset += 2
 	}
 
-	buffer = buffer[headerOffset:]
-	offset = copy(buffer, command)
-	return result, offset, nil
+	offset = copy(buffer[offset:], command)
+
+	return buffer, offset, nil
 }
 
 func DeserializePacket(
 	channel uint16,
-	buffer []byte,
-	sequenceIdx uint16) (result []byte, totalResponseLength uint16, isSequenceZero bool, err error) {
+	packet []byte,
+	sequenceIdx uint16,
+) ([]byte, uint16, bool, error) {
+	const minFirstPacketSize = 7
+	const minPacketSize = 5
+	const tag = 0x05
 
-	isSequenceZero = false
-
-	if (sequenceIdx == 0 && len(buffer) < 7) || (sequenceIdx > 0 && len(buffer) < 5) {
-		return nil, 0, isSequenceZero, errors.New("ledger: Cannot deserialize the packet. Header information is missing.")
+	if (sequenceIdx == 0 && len(packet) < minFirstPacketSize) || (sequenceIdx > 0 && len(packet) < minPacketSize) {
+		return nil, 0, false, errors.New("cannot deserialize the packet. header information is missing")
 	}
 
-	var headerOffset uint8
-
-	if codec.Uint16(buffer) != channel {
-		return nil, 0, isSequenceZero, errors.New(fmt.Sprintf("Invalid channel. Expected %d, Got: %d", channel, codec.Uint16(buffer)))
+	if codec.Uint16(packet) != channel {
+		return nil, 0, false, fmt.Errorf("%w: expected %d, got %d", ErrInvalidChannel, channel, codec.Uint16(packet))
 	}
-	headerOffset += 2
 
-	if buffer[headerOffset] != 0x05 {
-		return nil, 0, isSequenceZero, errors.New(fmt.Sprintf("Invalid tag. Expected %d, Got: %d", 0x05, buffer[headerOffset]))
-	}
-	headerOffset++
+	offset := 2
 
-	foundSequenceIdx := codec.Uint16(buffer[headerOffset:])
-	if foundSequenceIdx == 0 {
-		isSequenceZero = true
-	} else {
-		isSequenceZero = false
+	if packet[offset] != tag {
+		return nil, 0, false, fmt.Errorf("invalid tag. expected %d, got %d", tag, packet[offset])
 	}
+
+	offset++
+
+	foundSequenceIdx := codec.Uint16(packet[offset:])
+	isSequenceZero := foundSequenceIdx == 0
 
 	if foundSequenceIdx != sequenceIdx {
-		return nil, 0, isSequenceZero, errors.New(fmt.Sprintf("Wrong sequenceIdx. Expected %d, Got: %d", sequenceIdx, foundSequenceIdx))
+		return nil, 0, isSequenceZero, fmt.Errorf("wrong sequenceIdx: expected %d, got %d", sequenceIdx, foundSequenceIdx)
 	}
 
-	headerOffset += 2
+	offset += 2
 
+	var totalResponseLength uint16
 	if sequenceIdx == 0 {
-		totalResponseLength = codec.Uint16(buffer[headerOffset:])
-		headerOffset += 2
+		totalResponseLength = codec.Uint16(packet[offset:])
+		offset += 2
 	}
 
-	result = make([]byte, len(buffer)-int(headerOffset))
-	copy(result, buffer[headerOffset:])
-
-	return result, totalResponseLength, isSequenceZero, nil
+	return packet[offset:], totalResponseLength, isSequenceZero, nil
 }
 
 // WrapCommandAPDU turns the command into a sequence of 64 byte packets
-func WrapCommandAPDU(
-	channel uint16,
-	command []byte,
-	packetSize int) (result []byte, err error) {
-
-	var offset int
+func WrapCommandAPDU(channel uint16, command []byte, packetSize int) ([]byte, error) {
 	var totalResult []byte
 	var sequenceIdx uint16
 
 	for len(command) > 0 {
-		result, offset, err = SerializePacket(channel, command, packetSize, sequenceIdx)
+		packet, offset, err := SerializePacket(channel, command, packetSize, sequenceIdx)
 		if err != nil {
 			return nil, err
 		}
+
 		command = command[offset:]
-		totalResult = append(totalResult, result...)
+		totalResult = append(totalResult, packet...)
 		sequenceIdx++
 	}
 
@@ -178,53 +189,36 @@ func WrapCommandAPDU(
 // UnwrapResponseAPDU parses a response of 64 byte packets into the real data
 func UnwrapResponseAPDU(channel uint16, pipe <-chan []byte, packetSize int) ([]byte, error) {
 	var sequenceIdx uint16
-
 	var totalResult []byte
 	var totalSize uint16
-	var done = false
+	var foundZeroSequence bool
 
-	// return values from DeserializePacket
-	var result []byte
-	var responseSize uint16
-	var err error
-
-	foundZeroSequence := false
-	isSequenceZero := false
-
-	for !done {
-		// Read next packet from the channel
-		buffer := <-pipe
-
-		// this may fail if the wrong sequence arrives (especially if left over all 0000 was in the buffer from the last tx)
-		result, responseSize, isSequenceZero, err = DeserializePacket(channel, buffer, sequenceIdx)
+	for buffer := range pipe {
+		result, responseSize, isSequenceZero, err := DeserializePacket(channel, buffer, sequenceIdx)
 		if err != nil {
 			return nil, err
 		}
 
 		// Recover from a known error condition:
 		// * Discard messages left over from previous exchange until isSequenceZero == true
-		if foundZeroSequence == false && isSequenceZero == false {
+		if !foundZeroSequence && !isSequenceZero {
 			continue
 		}
 		foundZeroSequence = true
 
-		// Initialize totalSize (previously we did this if sequenceIdx == 0,
-		// but sometimes Nano X can provide the first sequenceIdx == 0 packet with all zeros,
-		// then a useful packet with sequenceIdx == 1
+		// Initialize totalSize
 		if totalSize == 0 {
 			totalSize = responseSize
 		}
 
-		buffer = buffer[packetSize:]
 		totalResult = append(totalResult, result...)
 		sequenceIdx++
 
 		if len(totalResult) >= int(totalSize) {
-			done = true
+			break
 		}
 	}
 
 	// Remove trailing zeros
-	totalResult = totalResult[:totalSize]
-	return totalResult, nil
+	return totalResult[:totalSize], nil
 }

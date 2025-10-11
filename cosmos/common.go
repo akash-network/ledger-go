@@ -1,5 +1,5 @@
 /*******************************************************************************
-*   (c) 2018 ZondaX GmbH
+*   (c) Zondax AG
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -69,6 +69,7 @@ func CheckVersion(ver VersionInfo, req VersionInfo) error {
 	if ver.Patch >= req.Patch {
 		return nil
 	}
+
 	return NewVersionRequiredError(req, ver)
 }
 
@@ -77,7 +78,9 @@ func GetBip32bytesv1(bip32Path []uint32, hardenCount int) ([]byte, error) {
 	if len(bip32Path) > 10 {
 		return nil, fmt.Errorf("maximum bip32 depth = 10")
 	}
+
 	message[0] = byte(len(bip32Path))
+
 	for index, element := range bip32Path {
 		pos := 1 + index*4
 		value := element
@@ -86,6 +89,7 @@ func GetBip32bytesv1(bip32Path []uint32, hardenCount int) ([]byte, error) {
 		}
 		binary.LittleEndian.PutUint32(message[pos:], value)
 	}
+
 	return message, nil
 }
 
@@ -94,6 +98,7 @@ func GetBip32bytesv2(bip44Path []uint32, hardenCount int) ([]byte, error) {
 	if len(bip44Path) != 5 {
 		return nil, fmt.Errorf("path should contain 5 elements")
 	}
+
 	for index, element := range bip44Path {
 		pos := index * 4
 		value := element
@@ -102,5 +107,6 @@ func GetBip32bytesv2(bip44Path []uint32, hardenCount int) ([]byte, error) {
 		}
 		binary.LittleEndian.PutUint32(message[pos:], value)
 	}
+
 	return message, nil
 }

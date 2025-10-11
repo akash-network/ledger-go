@@ -1,5 +1,7 @@
+//go:build ledger_mock
+
 /*******************************************************************************
-*   (c) 2018 ZondaX GmbH
+*   (c) Zondax AG
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -27,22 +29,41 @@ import (
 
 var mux sync.Mutex
 
+func TestLedger(t *testing.T) {
+	tests := []struct {
+		name string
+		test func(t *testing.T)
+	}{
+		{"CountLedgerDevices", Test_CountLedgerDevices},
+		{"ListDevices", TestListDevices},
+		{"GetLedger", Test_GetLedger},
+		{"BasicExchange", Test_BasicExchange},
+		{"Connect", TestConnect},
+		{"GetVersion", TestGetVersion},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, tt.test)
+	}
+}
+
 func Test_CountLedgerDevices(t *testing.T) {
 	mux.Lock()
 	defer mux.Unlock()
 
 	ledgerAdmin := NewLedgerAdmin()
 	count := ledgerAdmin.CountDevices()
-	assert.True(t, count > 0)
+	require.True(t, count > 0)
 }
 
-func Test_ListDevices(t *testing.T) {
-	mux.Lock()
-	defer mux.Unlock()
-
+func TestListDevices(t *testing.T) {
 	ledgerAdmin := NewLedgerAdmin()
-	_, err := ledgerAdmin.ListDevices()
-	require.NoError(t, err)
+
+	devices, err := ledgerAdmin.ListDevices()
+	if err != nil {
+		t.Fatalf("Error listing devices: %v", err)
+	}
+	assert.NotNil(t, devices, "Devices should not be nil")
 }
 
 func Test_GetLedger(t *testing.T) {
@@ -54,12 +75,13 @@ func Test_GetLedger(t *testing.T) {
 	require.True(t, count > 0)
 
 	ledger, err := ledgerAdmin.Connect(0)
+	if err != nil {
+		t.Fatalf("Error connecting to ledger: %v", err)
+	}
+	defer ledger.Close()
+
 	assert.NoError(t, err)
 	assert.NotNil(t, ledger)
-
-	defer func() {
-		_ = ledger.Close()
-	}()
 }
 
 func Test_BasicExchange(t *testing.T) {
@@ -71,12 +93,17 @@ func Test_BasicExchange(t *testing.T) {
 	require.True(t, count > 0)
 
 	ledger, err := ledgerAdmin.Connect(0)
-	assert.NoError(t, err)
-	assert.NotNil(t, ledger)
+	if err != nil {
+		t.Fatalf("Error connecting to ledger: %v", err)
+	}
+	defer ledger.Close()
 
-	defer func() {
-		_ = ledger.Close()
-	}()
+	// Set expected replies for the commands (only if using mock)
+	if mockLedger, ok := ledger.(*LedgerDeviceMock); ok {
+		mockLedger.SetCommandReplies(map[string]string{
+			"e001000000": "311000040853706563756c6f73000b53706563756c6f734d4355",
+		})
+	}
 
 	// Call device info (this should work in main menu and many apps)
 	message := []byte{0xE0, 0x01, 0, 0, 0}
@@ -91,4 +118,40 @@ func Test_BasicExchange(t *testing.T) {
 
 		require.True(t, len(response) > 0)
 	}
+}
+
+func TestConnect(t *testing.T) {
+	ledgerAdmin := NewLedgerAdmin()
+
+	ledger, err := ledgerAdmin.Connect(0)
+	if err != nil {
+		t.Fatalf("Error connecting to ledger: %v", err)
+	}
+	defer ledger.Close()
+
+	assert.NotNil(t, ledger, "Ledger should not be nil")
+}
+
+func TestGetVersion(t *testing.T) {
+	ledgerAdmin := NewLedgerAdmin()
+
+	ledger, err := ledgerAdmin.Connect(0)
+	if err != nil {
+		t.Fatalf("Error connecting to ledger: %v", err)
+	}
+	defer ledger.Close()
+
+	// Set expected replies for the commands (only if using mock)
+	if mockLedger, ok := ledger.(*LedgerDeviceMock); ok {
+		mockLedger.SetCommandReplies(map[string]string{
+			"e001000000": "311000040853706563756c6f73000b53706563756c6f734d4355",
+		})
+	}
+
+	// Call device info (this should work in main menu and many apps)
+	message := []byte{0xE0, 0x01, 0, 0, 0}
+
+	response, err := ledger.Exchange(message)
+	assert.NoError(t, err)
+	assert.NotEmpty(t, response, "Response should not be empty")
 }

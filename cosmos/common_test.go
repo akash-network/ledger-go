@@ -1,5 +1,5 @@
 /*******************************************************************************
-*   (c) 2018 ZondaX GmbH
+*   (c) Zondax AG
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -20,30 +20,33 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_PrintVersion(t *testing.T) {
 	reqVersion := VersionInfo{0, 1, 2, 3}
 	s := fmt.Sprintf("%v", reqVersion)
-	require.Equal(t, "1.2.3", s)
+	assert.Equal(t, "1.2.3", s)
 }
 
 func Test_PathGeneration0(t *testing.T) {
 	bip32Path := []uint32{44, 100, 0, 0, 0}
 
 	pathBytes, err := GetBip32bytesv1(bip32Path, 0)
-	require.NoError(t, err)
+
+	if err != nil {
+		t.Fatalf("Detected error, err: %s\n", err.Error())
+	}
 
 	fmt.Printf("Path: %x\n", pathBytes)
 
-	require.Equal(
+	assert.Equal(
 		t,
 		41,
 		len(pathBytes),
 		"PathBytes has wrong length: %x, expected length: %x\n", pathBytes, 41)
 
-	require.Equal(
+	assert.Equal(
 		t,
 		"052c000000640000000000000000000000000000000000000000000000000000000000000000000000",
 		fmt.Sprintf("%x", pathBytes),
@@ -54,17 +57,20 @@ func Test_PathGeneration2(t *testing.T) {
 	bip32Path := []uint32{44, 118, 0, 0, 0}
 
 	pathBytes, err := GetBip32bytesv1(bip32Path, 2)
-	require.NoError(t, err)
+
+	if err != nil {
+		t.Fatalf("Detected error, err: %s\n", err.Error())
+	}
 
 	fmt.Printf("Path: %x\n", pathBytes)
 
-	require.Equal(
+	assert.Equal(
 		t,
 		41,
 		len(pathBytes),
 		"PathBytes has wrong length: %x, expected length: %x\n", pathBytes, 41)
 
-	require.Equal(
+	assert.Equal(
 		t,
 		"052c000080760000800000000000000000000000000000000000000000000000000000000000000000",
 		fmt.Sprintf("%x", pathBytes),
@@ -75,17 +81,20 @@ func Test_PathGeneration3(t *testing.T) {
 	bip32Path := []uint32{44, 118, 0, 0, 0}
 
 	pathBytes, err := GetBip32bytesv1(bip32Path, 3)
-	require.NoError(t, err)
+
+	if err != nil {
+		t.Fatalf("Detected error, err: %s\n", err.Error())
+	}
 
 	fmt.Printf("Path: %x\n", pathBytes)
 
-	require.Equal(
+	assert.Equal(
 		t,
 		41,
 		len(pathBytes),
 		"PathBytes has wrong length: %x, expected length: %x\n", pathBytes, 41)
 
-	require.Equal(
+	assert.Equal(
 		t,
 		"052c000080760000800000008000000000000000000000000000000000000000000000000000000000",
 		fmt.Sprintf("%x", pathBytes),
@@ -96,17 +105,20 @@ func Test_PathGeneration0v2(t *testing.T) {
 	bip32Path := []uint32{44, 100, 0, 0, 0}
 
 	pathBytes, err := GetBip32bytesv2(bip32Path, 0)
-	require.NoError(t, err)
+
+	if err != nil {
+		t.Fatalf("Detected error, err: %s\n", err.Error())
+	}
 
 	fmt.Printf("Path: %x\n", pathBytes)
 
-	require.Equal(
+	assert.Equal(
 		t,
 		40,
 		len(pathBytes),
 		"PathBytes has wrong length: %x, expected length: %x\n", pathBytes, 40)
 
-	require.Equal(
+	assert.Equal(
 		t,
 		"2c000000640000000000000000000000000000000000000000000000000000000000000000000000",
 		fmt.Sprintf("%x", pathBytes),
@@ -117,17 +129,20 @@ func Test_PathGeneration2v2(t *testing.T) {
 	bip32Path := []uint32{44, 118, 0, 0, 0}
 
 	pathBytes, err := GetBip32bytesv2(bip32Path, 2)
-	require.NoError(t, err)
+
+	if err != nil {
+		t.Fatalf("Detected error, err: %s\n", err.Error())
+	}
 
 	fmt.Printf("Path: %x\n", pathBytes)
 
-	require.Equal(
+	assert.Equal(
 		t,
 		40,
 		len(pathBytes),
 		"PathBytes has wrong length: %x, expected length: %x\n", pathBytes, 40)
 
-	require.Equal(
+	assert.Equal(
 		t,
 		"2c000080760000800000000000000000000000000000000000000000000000000000000000000000",
 		fmt.Sprintf("%x", pathBytes),
@@ -138,17 +153,20 @@ func Test_PathGeneration3v2(t *testing.T) {
 	bip32Path := []uint32{44, 118, 0, 0, 0}
 
 	pathBytes, err := GetBip32bytesv2(bip32Path, 3)
-	require.NoError(t, err)
+
+	if err != nil {
+		t.Fatalf("Detected error, err: %s\n", err.Error())
+	}
 
 	fmt.Printf("Path: %x\n", pathBytes)
 
-	require.Equal(
+	assert.Equal(
 		t,
 		40,
 		len(pathBytes),
 		"PathBytes has wrong length: %x, expected length: %x\n", pathBytes, 40)
 
-	require.Equal(
+	assert.Equal(
 		t,
 		"2c000080760000800000008000000000000000000000000000000000000000000000000000000000",
 		fmt.Sprintf("%x", pathBytes),

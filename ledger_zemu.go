@@ -1,7 +1,7 @@
-//+build ledger_zemu
+//go:build ledger_zemu
 
 /*******************************************************************************
-*   (c) 2018 ZondaX GmbH
+*   (c) Zondax AG
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -20,25 +20,31 @@ package ledger_go
 
 import (
 	"context"
+	"errors"
 	"fmt"
+
 	"google.golang.org/grpc"
 )
 
+const (
+	defaultGrpcURL  = "localhost"
+	defaultGrpcPort = "3002"
+)
+
 type LedgerAdminZemu struct {
-	grpcURL  	string
-	grpcPort 	string
+	grpcURL  string
+	grpcPort string
 }
 
 type LedgerDeviceZemu struct {
-	connection 	*grpc.ClientConn
-	client		ZemuCommandClient
+	connection *grpc.ClientConn
+	client     ZemuCommandClient
 }
 
 func NewLedgerAdmin() *LedgerAdminZemu {
 	return &LedgerAdminZemu{
-		//TODO get this from flag value or from Zemu response
-		grpcURL: "localhost",
-		grpcPort: "3002",
+		grpcURL:  defaultGrpcURL,
+		grpcPort: defaultGrpcPort,
 	}
 }
 
@@ -54,8 +60,8 @@ func (admin *LedgerAdminZemu) CountDevices() int {
 }
 
 func (admin *LedgerAdminZemu) Connect(deviceIndex int) (*LedgerDeviceZemu, error) {
-	serverAddr := admin.grpcURL +  ":" + admin.grpcPort
-	//TODO: check Dial flags
+	serverAddr := admin.grpcURL + ":" + admin.grpcPort
+	// TODO: check Dial flags
 	conn, err := grpc.Dial(serverAddr, grpc.WithInsecure())
 
 	if err != nil {
@@ -96,7 +102,7 @@ func (ledger *LedgerDeviceZemu) Exchange(command []byte) ([]byte, error) {
 	sw := codec.Uint16(response[swOffset:])
 
 	if sw != 0x9000 {
-		return response[:swOffset], fmt.Errorf("return code with error")
+		return response[:swOffset], errors.New(ErrorMessage(sw))
 	}
 
 	return response[:swOffset], nil
