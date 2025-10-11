@@ -5,11 +5,11 @@ go 1.23.0
 require (
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2
 	github.com/stretchr/testify v1.11.1
-	github.com/zondax/ledger-go v0.12.2
+	github.com/zondax/ledger-go v0.15.0
 )
 
 replace (
-	github.com/zondax/hid => github.com/troian/hid v0.11.0
+	github.com/zondax/hid => github.com/troian/hid v0.13.2
 	github.com/zondax/ledger-go => ../
 )
 
