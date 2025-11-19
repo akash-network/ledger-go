@@ -12,7 +12,7 @@ require (
 	google.golang.org/protobuf v1.36.8
 )
 
-replace github.com/zondax/hid => github.com/troian/hid v0.13.2
+replace github.com/zondax/hid => github.com/troian/hid v0.14.0
 
 require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
