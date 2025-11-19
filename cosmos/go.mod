@@ -9,7 +9,7 @@ require (
 )
 
 replace (
-	github.com/zondax/hid => github.com/troian/hid v0.13.2
+	github.com/zondax/hid => github.com/troian/hid v0.14.0
 	github.com/zondax/ledger-go => ../
 )
 
